@@ -1,69 +1,157 @@
-import Image from "next/image";
+"use client";
+
+import Link from "next/link";
+import { type FormEvent, useEffect, useState } from "react";
+import { enrollInCourse, getCourses, type Course } from "@/lib/api";
+import { CourseList } from "@/components/course-list";
+import { EnrollmentForm } from "@/components/enrollment-form";
+import { HeroSection } from "@/components/hero-section";
+
+const initialEnrollment = {
+  cursoId: "",
+  nome: "",
+  email: "",
+  whatsapp: "",
+};
 
 export default function Home() {
+  const [courses, setCourses] = useState<Course[]>([]);
+  const [selectedCourseId, setSelectedCourseId] = useState("");
+  const [enrollmentForm, setEnrollmentForm] = useState(initialEnrollment);
+  const [statusMessage, setStatusMessage] = useState("");
+  const [isLoadingCourses, setIsLoadingCourses] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const loadCourses = async () => {
+    try {
+      setIsLoadingCourses(true);
+      const data = await getCourses();
+      setCourses(data);
+      if (data.length > 0) {
+        setSelectedCourseId(data[0].id);
+        setEnrollmentForm((current) => ({ ...current, cursoId: data[0].id }));
+      }
+    } catch (error) {
+      console.error(error);
+      setStatusMessage(
+        error instanceof Error
+          ? error.message
+          : "Não foi possível carregar os cursos no momento. Verifique a API.",
+      );
+    } finally {
+      setIsLoadingCourses(false);
+    }
+  };
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const fetchCourses = async () => {
+      try {
+        setIsLoadingCourses(true);
+        const data = await getCourses();
+        if (!isMounted) return;
+
+        setCourses(data);
+        if (data.length > 0) {
+          setSelectedCourseId(data[0].id);
+          setEnrollmentForm((current) => ({ ...current, cursoId: data[0].id }));
+        }
+      } catch (error) {
+        console.error(error);
+        if (isMounted) {
+          setStatusMessage(
+            error instanceof Error
+              ? error.message
+              : "Não foi possível carregar os cursos no momento. Verifique a API.",
+          );
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoadingCourses(false);
+        }
+      }
+    };
+
+    void fetchCourses();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const handleEnrollment = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setIsSubmitting(true);
+
+    try {
+      await enrollInCourse({
+        cursoId: enrollmentForm.cursoId,
+        nome: enrollmentForm.nome,
+        email: enrollmentForm.email,
+        whatsapp: enrollmentForm.whatsapp,
+      });
+
+      setStatusMessage("Inscrição enviada com sucesso.");
+      setEnrollmentForm(initialEnrollment);
+      if (courses[0]) {
+        setSelectedCourseId(courses[0].id);
+        setEnrollmentForm((current) => ({ ...current, cursoId: courses[0].id }));
+      }
+    } catch (error) {
+      console.error(error);
+      setStatusMessage(error instanceof Error ? error.message : "Não foi possível realizar a inscrição.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleEnrollmentCourseChange = (courseId: string) => {
+    setSelectedCourseId(courseId);
+    setEnrollmentForm((current) => ({ ...current, cursoId: courseId }));
+  };
+
+  const handleEnrollmentFieldChange = (field: keyof typeof initialEnrollment, value: string) => {
+    setEnrollmentForm((current) => ({ ...current, [field]: value }));
+  };
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+    <main className="min-h-screen bg-slate-950 text-white">
+      <div className="mx-auto max-w-7xl px-6 py-8 lg:px-8">
+        <header className="mb-10 flex items-center justify-between rounded-full border border-white/10 bg-white/5 px-5 py-3 backdrop-blur-sm">
+          <Link href="/" className="text-lg font-semibold tracking-tight text-white">RotaProdutiva</Link>
+          <nav className="flex flex-wrap items-center justify-end gap-4 text-sm text-slate-300 sm:gap-6">
+            <Link href="/#cursos" className="transition hover:text-white">Cursos</Link>
+            <Link href="/#inscricao" className="transition hover:text-white">Inscrição</Link>
+            <Link href="/tutor" className="transition hover:text-white">Tutor</Link>
+            <Link href="/admin" className="transition hover:text-white">Admin</Link>
+          </nav>
+        </header>
+
+        <HeroSection statusMessage={statusMessage} />
+
+        <section id="cursos">
+          <CourseList
+            courses={courses}
+            selectedCourseId={selectedCourseId}
+            isLoadingCourses={isLoadingCourses}
+            onRefresh={() => void loadCourses()}
+            onSelectCourse={handleEnrollmentCourseChange}
+          />
+        </section>
+
+        <section id="inscricao" className="mt-16">
+          <EnrollmentForm
+            selectedCourseId={selectedCourseId}
+            courses={courses}
+            enrollmentForm={enrollmentForm}
+            isSubmitting={isSubmitting}
+            onCourseChange={handleEnrollmentCourseChange}
+            onFieldChange={handleEnrollmentFieldChange}
+            onSubmit={handleEnrollment}
+          />
+        </section>
+      </div>
+    </main>
   );
 }

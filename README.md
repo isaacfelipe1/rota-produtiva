@@ -1,36 +1,125 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Rota Produtiva
 
-## Getting Started
+Aplicação web em Next.js para gestão de tutores, cursos e acesso ao painel administrativo.
 
-First, run the development server:
+## Tecnologias
+
+- Next.js 16
+- React 19
+- TypeScript
+- Tailwind CSS
+- Docker
+
+## Pré-requisitos
+
+- Node.js 20+
+- npm
+- Docker e Docker Compose (opcional, para rodar em container)
+
+## Instalação
+
+Clone o projeto e acesse a pasta:
+
+```bash
+git clone <url-do-repositorio>
+cd rota-produtiva
+```
+
+Instale as dependências:
+
+```bash
+npm install
+```
+
+## Variáveis de ambiente
+
+Crie um arquivo `.env.local` na raiz do projeto com as variáveis necessárias para a aplicação.
+
+Exemplo:
+
+```env
+NEXT_PUBLIC_API_URL=http://localhost:3001
+```
+
+> Ajuste os valores conforme a API ou serviços que a aplicação consome.
+
+## Executar localmente
+
+Modo de desenvolvimento:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+A aplicação ficará disponível em:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```text
+http://localhost:3000
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Build de produção:
 
-## Learn More
+```bash
+npm run build
+npm run start
+```
 
-To learn more about Next.js, take a look at the following resources:
+## Executar com Docker
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Build da imagem:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```bash
+docker build -t rota-produtiva .
+```
 
-## Deploy on Vercel
+Rodar o container:
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```bash
+docker run -p 3000:3000 --env-file .env.local rota-produtiva
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Ou com Docker Compose:
+
+```bash
+docker compose up --build
+```
+
+## Estrutura do projeto
+
+```text
+.
+├── src/
+│   ├── app/
+│   ├── components/
+│   └── lib/
+├── public/
+├── .gitignore
+├── .dockerignore
+├── Dockerfile
+├── docker-compose.yml
+├── next.config.ts
+├── package.json
+├── tsconfig.json
+├── README.md
+└── .env.local
+```
+
+## Scripts disponíveis
+
+```bash
+npm run dev     # inicia em modo desenvolvimento
+npm run build   # gera build de produção
+npm run start   # inicia a aplicação em produção
+npm run lint    # verifica lint do projeto
+```
+
+## Observações
+
+- O projeto já inclui configurações para Docker e Next.js em produção.
+- O arquivo `.gitignore` evita versionar dependências, cache, arquivos locais e variáveis sensíveis.
+- O login do tutor fica em uma rota separada, em `/tutor/login`, e não aparece na navegação pública do site.
+- A navegação pública é mantida para visitantes e páginas abertas, enquanto o acesso do tutor fica isolado em uma área específica.
+
+## Licença
+
+Este projeto está sob a licença definida pela equipe de desenvolvimento.
